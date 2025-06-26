@@ -77,7 +77,7 @@ if [ $FIPS_MODE -eq 1 ]; then
     echo "Running FIPS checks..."
     make check
 
-    sudo make install
+    make install
     cd ../
 
 else
@@ -92,7 +92,7 @@ else
     ./configure --prefix=$WOLFSSL_INSTALL/ CC=clang --enable-cmac --with-eccminsz=192 --enable-ed25519 --enable-ed448 --enable-curve25519 --enable-curve448 --enable-aesccm --enable-aesxts --enable-aescfb --enable-keygen --enable-shake128 --enable-shake256 'CFLAGS=-DWOLFSSL_PUBLIC_ASN -DHAVE_FFDHE_3072 -DHAVE_FFDHE_4096 -DWOLFSSL_DH_EXTRA -DWOLFSSL_PSS_SALT_LEN_DISCOVER -DWOLFSSL_PUBLIC_MP -DWOLFSSL_RSA_KEY_CHECK -DHAVE_FFDHE_Q -DHAVE_FFDHE_6144 -DHAVE_FFDHE_8192 -DWOLFSSL_ECDSA_DETERMINISTIC_K -DWOLFSSL_VALIDATE_ECC_IMPORT -DRSA_MIN_SIZE=1024'
 
     make
-    sudo make install
+    make install
     cd ../
 fi
 
@@ -151,12 +151,12 @@ else
     make -j9
 fi
 
-sudo make install
+make install
 cd ../
 
 cd ./wolfssl-gnutls-wrapper
 make
-sudo make install
+make install
 cd ../
 
 echo "Build completed successfully"
