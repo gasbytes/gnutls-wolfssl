@@ -89,7 +89,7 @@ jobs:
       - name: Verify VTE is linked against the custom GnuTLS
         working-directory: vte/_build
         run: |
-          lib=$(find src -maxdepth 1 -name 'libvte-2.91*.so*' | head -n 1)
+          lib=$(find src -maxdepth 1 -name 'libvte-2.91*.so' | head -n 1)
           echo "Checking linkage for $lib"
           ldd "$lib" | grep gnutls
           if ! ldd "$lib" | grep -q '/opt/gnutls/lib/libgnutls.so'; then
