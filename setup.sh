@@ -286,7 +286,7 @@ else
         CONFIG_OPTS="$CONFIG_OPTS --enable-fips140-mode"
     fi
 
-    if [ "$GNUTLS_BRANCH" -eq "gnutls-wolfssl-3.8.11" ]; then
+    if [ "$GNUTLS_BRANCH" == "gnutls-wolfssl-3.8.11" ]; then
         # Download nettle 3.10, since gnutls 3.8.11 requires nettle to be >= 3.10
         wget https://ftp.gnu.org/gnu/nettle/nettle-3.10.tar.gz
         tar -xzf nettle-3.10.tar.gz

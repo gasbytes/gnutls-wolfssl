@@ -40,7 +40,7 @@ jobs:
             ~/cache/gnutls
             ~/cache/wolfssl
             ~/cache/wolfssl-gnutls-wrapper
-          key: gnutls-wolfssl-${{ runner.os }}-${{ hashFiles('setup.sh', 'wolfssl-gnutls-wrapper/**', 'wolfssl/**', 'gnutls/**') }}
+          key: gnutls-wolfssl-3.8.11-${{ runner.os }}-${{ hashFiles('setup.sh', 'wolfssl-gnutls-wrapper/**', 'wolfssl/**', 'gnutls/**') }}
           restore-keys: |
             gnutls-wolfssl-${{ runner.os }}-
 
@@ -57,7 +57,7 @@ jobs:
         if: steps.cache-gnutls.outputs.cache-hit != 'true'
         run: |
           echo "Cache miss - running setup.sh..."
-          GNUTLS_INSTALL=/opt/gnutls WOLFSSL_INSTALL=/opt/wolfssl ./setup.sh
+          GNUTLS_INSTALL=/opt/gnutls WOLFSSL_INSTALL=/opt/wolfssl ./setup.sh 3.8.11
           # Save to cache location
           mkdir -p ~/cache
           sudo cp -a /opt/gnutls ~/cache/
