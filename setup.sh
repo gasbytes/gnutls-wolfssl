@@ -4,6 +4,7 @@ set -e
 # Default values
 DEFAULT_GNUTLS_VERSION="3.8.9"
 FIPS_MODE=0
+FIPS_READY_MODE=0
 GNUTLS_VERSION=""
 
 # ============================================================================
@@ -37,6 +38,12 @@ EXAMPLES:
     $(basename "$0") fips 3.8.11
         Build with FIPS 140 mode enabled, using GnuTLS branch gnutls-wolfssl-3.8.11
 
+    $(basename "$0") fips-ready
+        Build with FIPS *ready* 140 mode enabled, using default GnuTLS branch (gnutls-wolfssl-$DEFAULT_GNUTLS_VERSION)
+
+    $(basename "$0") fips-ready 3.8.11
+        Build with FIPS *ready* mode enabled, using GnuTLS branch gnutls-wolfssl-3.8.11
+
 ENVIRONMENT VARIABLES:
     WOLFSSL_INSTALL     Installation path for wolfSSL (default: /opt/wolfssl)
     GNUTLS_INSTALL      Installation path for GnuTLS (default: /opt/gnutls)
@@ -64,6 +71,10 @@ parse_arguments() {
                 ;;
             fips)
                 FIPS_MODE=1
+                shift
+                ;;
+            fips-ready)
+                FIPS_READY_MODE=1
                 shift
                 ;;
             *)
@@ -114,10 +125,12 @@ fi
 echo "=============================================="
 echo "Build Configuration:"
 echo "=============================================="
-if [ $FIPS_MODE -eq 1 ]; then
-    echo "  FIPS 140 Mode:    ENABLED"
+if [ $FIPS_READY_MODE -eq 1 ]; then
+    echo "  FIPS Mode:        ENABLED (fips-ready)"
+elif [ $FIPS_MODE -eq 1 ]; then
+    echo "  FIPS Mode:        ENABLED (fips)"
 else
-    echo "  FIPS 140 Mode:    DISABLED"
+    echo "  FIPS Mode:        DISABLED"
 fi
 echo "  GnuTLS Version:   $GNUTLS_VERSION"
 echo "  GnuTLS Branch:    $GNUTLS_BRANCH"
@@ -158,7 +171,7 @@ if [ $FIPS_MODE -eq 1 ]; then
     if [ "$USE_SYSTEM_WOLFSSL" -eq 1 ]; then
         echo "Using system wolfSSL. Skipping wolfSSL build."
     else
-        echo "Setting up wolfSSL with FIPS-ready mode..."
+        echo "Setting up wolfSSL with FIPS mode (v5.2.4)..."
 
         if [ -n "$WOLFSSL_FIPS_BUNDLE" ]; then
             # User provided a bundle directory – use it verbatim
@@ -175,7 +188,7 @@ if [ $FIPS_MODE -eq 1 ]; then
             echo "Cloning fips-src"
             git clone git@github.com:wolfSSL/fips-src.git
 
-            echo "Cloning wolfSSL repository for FIPS-ready build..."
+            echo "Cloning wolfSSL repository for FIPS build..."
             git clone https://github.com/wolfssl/wolfssl.git
             cd wolfssl
 
@@ -201,6 +214,53 @@ if [ $FIPS_MODE -eq 1 ]; then
         ./fips-hash.sh
 
         make
+
+        echo "Running FIPS checks..."
+        make check
+
+        sudo make install
+        cd ../
+    fi
+elif [ $FIPS_READY_MODE -eq 1 ]; then
+    if [ "$USE_SYSTEM_WOLFSSL" -eq 1 ]; then
+        echo "Using system wolfSSL. Skipping wolfSSL build."
+    else
+        echo "Setting up wolfSSL with FIPS-ready mode..."
+
+        if [ -n "$WOLFSSL_FIPS_BUNDLE" ]; then
+            # User provided a bundle directory – use it verbatim
+            if [ ! -d "$WOLFSSL_FIPS_BUNDLE" ]; then
+                echo "ERROR: WOLFSSL_FIPS_BUNDLE '$WOLFSSL_FIPS_BUNDLE' is not a directory."
+                exit 1
+            fi
+            echo "Using pre-downloaded wolfSSL FIPS-ready bundle at '$WOLFSSL_FIPS_BUNDLE'"
+            cd "$WOLFSSL_FIPS_BUNDLE"
+        else
+            # Fresh checkout & FIPS-ready helper
+            rm -rf wolfssl/ fips-ready-checkout/
+
+            echo "Cloning wolfSSL repository for FIPS-ready build..."
+            git clone https://github.com/wolfssl/wolfssl.git
+            cd wolfssl
+
+            echo "Running FIPS-ready preparation..."
+            ./fips-check.sh fips-ready keep
+
+            echo "Moving FIPS directory XXX-fips-test to ../fips-ready-checkout"
+            mv XXX-fips-test ../fips-ready-checkout
+
+            cd ..
+            rm -rf wolfssl/
+
+            cd fips-ready-checkout
+        fi
+
+        ./configure --prefix=$WOLFSSL_INSTALL/ CC=clang --enable-fips=ready --enable-cmac --enable-aesccm --enable-keygen 'CFLAGS=-DWOLFSSL_PUBLIC_ASN -DHAVE_PUBLIC_FFDHE -DHAVE_FFDHE_3072 -DHAVE_FFDHE_4096 -DWOLFSSL_DH_EXTRA -DWOLFSSL_PSS_SALT_LEN_DISCOVER -DWOLFSSL_PUBLIC_MP -DWOLFSSL_RSA_KEY_CHECK -DNO_MD5'
+
+        make
+
+        echo "Running FIPS hash verification..."
+        ./fips-hash.sh
 
         echo "Running FIPS checks..."
         make check
@@ -252,7 +312,7 @@ if [ "$OS" = "linux" ]; then
 
     CONFIG_OPTS="--prefix=$GNUTLS_INSTALL/ --disable-doc --disable-manpages --disable-gtk-doc --disable-gost --disable-dsa --disable-full-test-suite --disable-valgrind-tests --disable-dependency-tracking --enable-srp-authentication"
 
-    if [ $FIPS_MODE -eq 1 ]; then
+    if [ $FIPS_MODE -eq 1 ] || [ $FIPS_READY_MODE -eq 1 ]; then
         CONFIG_OPTS="$CONFIG_OPTS --enable-fips140-mode"
     fi
 
@@ -298,7 +358,13 @@ echo ""
 echo "=============================================="
 echo "Build completed successfully!"
 echo "=============================================="
-echo "  FIPS Mode:        $([ $FIPS_MODE -eq 1 ] && echo 'ENABLED' || echo 'DISABLED')"
+if [ $FIPS_READY_MODE -eq 1 ]; then
+    echo "  FIPS Mode:        ENABLED (fips-ready)"
+elif [ $FIPS_MODE -eq 1 ]; then
+    echo "  FIPS Mode:        ENABLED (fips)"
+else
+    echo "  FIPS Mode:        DISABLED"
+fi
 echo "  GnuTLS Branch:    $GNUTLS_BRANCH"
 echo "  wolfSSL:          $WOLFSSL_INSTALL"
 echo "  GnuTLS:           $GNUTLS_INSTALL"
