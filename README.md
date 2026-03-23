@@ -18,6 +18,12 @@ cd gnutls-wolfssl
 # build specific version with FIPS 140 support
 ./setup.sh fips 3.8.11
 
+# build with FIPS ready support
+./setup.sh fips-ready
+
+# build specific version with FIPS ready support
+./setup.sh fips-ready 3.8.11
+
 # show help and all options
 ./setup.sh --help
 ```
