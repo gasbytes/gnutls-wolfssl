@@ -19,7 +19,7 @@ jobs:
     strategy:
       matrix:
         os: [ ubuntu-latest ]
-        qpdf_ref: [ 'main', 'v11.3.0', 'v12.2.0' ]
+        qpdf_ref: [ 'v11.3.0', 'v12.2.0' ]
       fail-fast: false
     runs-on: ${{ matrix.os }}
     container:

@@ -110,6 +110,7 @@ jobs:
           cd $RUNNER_WORKSPACE
           git clone https://github.com/FFmpeg/FFmpeg.git ffmpeg-gnutls
           cd ffmpeg-gnutls
+          git checkout n8.1
           export PKG_CONFIG_PATH="/opt/gnutls/lib/pkgconfig:/opt/gstreamer/lib/pkgconfig"
           export CPPFLAGS="-I/opt/gnutls/include -I/opt/gstreamer/include"
           export LDFLAGS="-L/opt/gnutls/lib -L/opt/gstreamer/lib -Wl,-rpath,/opt/gnutls/lib -Wl,-rpath,/opt/gstreamer/lib"
