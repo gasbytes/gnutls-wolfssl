@@ -90,13 +90,10 @@ jobs:
           echo "GnuTLS version verified: 3.8.11"
       - name: Clone wireshark
         run: |
-          git clone https://github.com/wireshark/wireshark.git
+          git clone --depth=1 --branch ${{ matrix.wireshark_ref }} https://github.com/wireshark/wireshark.git
       - name: Setup and build wireshark
         working-directory: wireshark
         run: |
-          if [[ "${{ matrix.wireshark_ref }}" != "master" ]]; then
-            git checkout ${{ matrix.wireshark_ref }}
-          fi
           sudo ./tools/debian-setup.sh
           sudo ./tools/debian-setup.sh --install-deb-deps
           sudo ./tools/debian-setup.sh --install-test-deps
